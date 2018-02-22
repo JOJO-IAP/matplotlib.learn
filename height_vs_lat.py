@@ -19,8 +19,8 @@ from matplotlib.font_manager import FontProperties
 #==============================================================================
 
 # 读入数据
-fu = Dataset('/Users/tianjiaoma/Downloads/python.learn/Data/uwnd.mon.ltm.nc')
-fv = Dataset('/Users/tianjiaoma/Downloads/python.learn/Data/vwnd.mon.ltm.nc')
+fu = Dataset('Data/uwnd.mon.ltm.nc')
+fv = Dataset('Data/vwnd.mon.ltm.nc')
 # print(f)
 '''levels= [ 1000.   925.   850.   700.   600.   500.   400.   300.   250.   200.
    150.   100.    70.    50.    30.    20.    10.]'''
