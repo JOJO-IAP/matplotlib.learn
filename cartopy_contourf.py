@@ -84,11 +84,13 @@ subtitles  = ['1)', '2)', '3)', '4)']
 # 指定colorbar
 cmap = mpl.cm.PiYG
 # 设定每个图的colormap和colorbar所表示范围是一样的，归一化
-levelmin = data.min()
-levelmax = abs(levelmin)
-norm = mpl.colors.Normalize(vmin=levelmin, vmax=levelmax)
+if abs(cyclic_data.min()) >= cyclic_data.max():
+    levelmin = cyclic_data.min()
+else:
+    levelmin = -cyclic_data.max()
+norm = mpl.colors.Normalize(vmin=levelmin, vmax=-levelmin)
 # 设置levels
-levels = mpl.ticker.MaxNLocator(nbin=16).tick_values(levelmin, levelmax)
+levels = mpl.ticker.MaxNLocator(nbin=16).tick_values(levelmin, -levelmin)
 
 #==============================================================================
 
