@@ -27,10 +27,17 @@ fv = Dataset('./Data/vwnd.mon.ltm.nc')
 # print(f)
 '''levels= [ 1000.   925.   850.   700.   600.   500.   400.   300.   250.   200.
    150.   100.    70.    50.    30.    20.    10.]'''
-level = 2
+level = '850'
 
-uwnd      = np.array(fu.variables['uwnd'][0,level,:,:])
+uwnd      = np.array(fu.variables['uwnd'][:,0,:,:])
+uwnd_mask = np.ma.masked_where(uwnd < -10**36, uwnd)
+uprob     = np.array(fu.variables['uwnd'][:,1,:,:])
+uprob_mask = np.ma.masked_where(uprob < -10**36, uprob)
 vwnd      = np.array(fv.variables['vwnd'][0,level,:,:])
+vwnd_mask = np.ma.masked_where(vwnd < -10**36, vwnd)
+vprob     = np.array(fu.variables['vwnd'][:,1,:,:])
+vprob_mask = np.ma.masked_where(vprob < -10**36, uprob)
+
 lats      = np.array(fu.variables['lat'][:])
 lons      = np.array(fu.variables['lon'][:])
 levels    = np.array(fu.variables['level'][:])
@@ -39,13 +46,12 @@ levels    = np.array(fu.variables['level'][:])
 #mask较小的vector
 speed = np.sqrt(np.square(uwnd)+np.square(vwnd))
 threshold = 3.0
-u_mask = np.ma.masked_where(speed < threshold, uwnd)
-v_mask = np.ma.masked_where(speed < threshold, vwnd)
+u_mask = np.ma.masked_where(speed < threshold, uwnd_mask)
+v_mask = np.ma.masked_where(speed < threshold, vwnd_mask)
 
 #计算显著性检验
-prob = np.fmax(np.absolute(uwnd), np.absolute(vwnd))
-prob = prob/np.std(prob)
-#print(prob.shape, prob.min(), prob.max())
+prob = np.fmax(np.absolute(uprob_mask), np.absolute(vprob_mask))
+
 #==============================================================================
 
 #函数形式，调用cartopy，绘制全球地图
