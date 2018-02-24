@@ -18,10 +18,10 @@ import numpy as np
 #==============================================================================
 
 # 读入数据
-fu = Dataset('reg.uwnd850.nc')
-fv = Dataset('reg.vwnd850.nc')
+fu = Dataset('uwnd850.nc')
+fv = Dataset('vwnd850.nc')
 # print(f)
-'''levels= [ 1000.   925.   850.   700.   600.   500.   400.   300.   250.   200.
+'''levels= [ 1000.   925.   850.   700.   600.   500.   400.   300.   250.   850.
    150.   100.    70.    50.    30.    20.    10.]'''
 missing_value = -10**36
 
@@ -40,7 +40,7 @@ lons      = np.array(fu.variables['lon'][:])
 
 #mask较小的vector
 speed = np.sqrt(np.square(uwnd_mask)+np.square(vwnd_mask))
-threshold = 0.1
+threshold = 0.2
 u_mask = np.ma.masked_where(speed < threshold, uwnd_mask)
 v_mask = np.ma.masked_where(speed < threshold, vwnd_mask)
 
@@ -85,8 +85,14 @@ nrows      = 2
 ncols      = 1
 # prob_level
 levels_prob = [0., 0.95, 1.0]
-subtitles = ['a) ,'b) ']
+subtitles = ['a) EAWIM','b) EAWMIres']
 figtitle = 'Reg_wind 850hPa'
+
+#quiver 参数设置
+scl = 3.
+#quiverkey 参数设置
+U = 1
+Ulabel = '1 m/s'
 #==============================================================================
 
 # 开始绘图
@@ -112,10 +118,10 @@ for i in range(nrows*ncols):
     '''headlength控制箭头长度，以箭杆宽度为标准，默认值为箭杆宽度的5倍'''
     '''minshaft 长度低于scale的值的箭头，尖端长度设置为，默认值1'''
     '''minlength 长度低于该值（箭杆宽度为标准），的箭头不被绘制，只绘制一个点'''
-    q  = ax.quiver(X, Y, u_mask[i,::3,::3], v_mask[i,::3,::3], units='inches', scale=2.5, width=0.02, color='b',transform=projection)
+    q  = ax.quiver(X, Y, u_mask[i,::3,::3], v_mask[i,::3,::3], units='inches', scale=scl, width=0.015, color='b',transform=projection)
     ax.set_title(subtitles[i], loc='left')
     # 绘制矢量图例
-    qk = ax.quiverkey(q, 0.9, 1.05, 1, '1 m/s', labelpos='N', color='r')
+    qk = ax.quiverkey(q, 0.9, 1.05, U, Ulabel, labelpos='N', color='r')
     # ax 传递给axes
     axes.append(ax)
 #==============================================================================
