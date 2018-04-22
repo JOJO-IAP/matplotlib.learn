@@ -2,7 +2,8 @@
 
 #JOJO, IAP, Beiing, Email:mtjsummer@163.com
 #2018-02-09
-
+' plot cartopy map module '
+__author__ = 'JOJO'
 #==============================================================================
 
 import matplotlib.pyplot as plt
@@ -31,4 +32,5 @@ def make_map(ax, projection, resolution, mapextent, xnum, ynum):
 
 '''注意画经圈360的设置：projection=ccrs.PlateCarree(central_longitude=180),
 lonstart=60, lonstop=360(即代表0E), xnum=6'''
+
 #==============================================================================

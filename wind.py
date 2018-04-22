@@ -1,51 +1,52 @@
 #==============================================================================
 
 #JOJO, IAP, Beiing, Email:mtjsummer@163.com
-#2018-02-07
-
-#练习6目标：
-#  1.绘制矢量图
-#  2.调整vector大小，密度
-#  3.绘制矢量图例
-#  4.叠加显著性检验
 
 #==============================================================================
 
 import matplotlib.pyplot as plt
 import matplotlib as mpl
+from matplotlib.font_manager import FontProperties
+
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
+
 from netCDF4 import Dataset 
 import numpy as np
 
 #==============================================================================
 
 # 读入数据
-fu = Dataset('./Data/uwnd.mon.ltm.nc')
-fv = Dataset('./Data/vwnd.mon.ltm.nc')
+fu = Dataset('uwnd850.nc')
+fv = Dataset('vwnd850.nc')
 # print(f)
-'''levels= [ 1000.   925.   850.   700.   600.   500.   400.   300.   250.   200.
+'''levels= [ 1000.   925.   850.   700.   600.   500.   400.   300.   250.   850.
    150.   100.    70.    50.    30.    20.    10.]'''
-level = 2
+missing_value = -10**36
 
-uwnd      = np.array(fu.variables['uwnd'][0,level,:,:])
-vwnd      = np.array(fv.variables['vwnd'][0,level,:,:])
+uwnd      = np.array(fu.variables['reg'][:,0,:,:])
+uwnd_mask = np.ma.masked_where(uwnd < missing_value, uwnd)
+uprob     = np.array(fu.variables['reg'][:,1,:,:])
+uprob_mask = np.ma.masked_where(uprob < missing_value, uprob)
+
+vwnd      = np.array(fv.variables['reg'][:,0,:,:])
+vwnd_mask = np.ma.masked_where(vwnd < missing_value, vwnd)
+vprob     = np.array(fu.variables['reg'][:,1,:,:])
+vprob_mask = np.ma.masked_where(vprob < missing_value, uprob)
+
 lats      = np.array(fu.variables['lat'][:])
 lons      = np.array(fu.variables['lon'][:])
-levels    = np.array(fu.variables['level'][:])
-#print(uwnd.max())
 
 #mask较小的vector
-speed = np.sqrt(np.square(uwnd)+np.square(vwnd))
-threshold = 3.0
-u_mask = np.ma.masked_where(speed < threshold, uwnd)
-v_mask = np.ma.masked_where(speed < threshold, vwnd)
+speed = np.sqrt(np.square(uwnd_mask)+np.square(vwnd_mask))
+threshold = 0.2
+u_mask = np.ma.masked_where(speed < threshold, uwnd_mask)
+v_mask = np.ma.masked_where(speed < threshold, vwnd_mask)
 
 #计算显著性检验
-prob = np.fmax(np.absolute(uwnd), np.absolute(vwnd))
-prob = prob/np.std(prob)
-#print(prob.shape, prob.min(), prob.max())
+prob = np.fmax(np.absolute(uprob_mask), np.absolute(vprob_mask))
+
 #==============================================================================
 
 #函数形式，调用cartopy，绘制全球地图
@@ -72,19 +73,26 @@ def make_map(ax, projection, resolution, box, xnum, ynum):
 projection = ccrs.PlateCarree()
 resolution = '110m'
 lonstart   = 60
-lonstop    = 300
-latstart   = 0
+lonstop    = 360
+latstart   = -30
 latstop    = 90
 box        = np.array([lonstart, lonstop, latstart, latstop])
 # x，y轴标签个数
-xnum       = 5
-ynum       = 4
+xnum       = 6
+ynum       = 5 
 #
 nrows      = 2
 ncols      = 1
 # prob_level
-levels_prob = [0., 0.5, 0.95]
-subtitles = ['a','b']
+levels_prob = [0., 0.95, 1.0]
+subtitles = ['a) EAWIM','b) EAWMIres']
+figtitle = 'Reg_wind 850hPa'
+
+#quiver 参数设置
+scl = 3.
+#quiverkey 参数设置
+U = 1
+Ulabel = '1 m/s'
 #==============================================================================
 
 # 开始绘图
@@ -110,21 +118,19 @@ for i in range(nrows*ncols):
     '''headlength控制箭头长度，以箭杆宽度为标准，默认值为箭杆宽度的5倍'''
     '''minshaft 长度低于scale的值的箭头，尖端长度设置为，默认值1'''
     '''minlength 长度低于该值（箭杆宽度为标准），的箭头不被绘制，只绘制一个点'''
-    q  = ax.quiver(X, Y, u_mask[::3,::3], v_mask[::3,::3], units='inches', 
-        scale=25., width=0.02, color='b')
+    q  = ax.quiver(X, Y, u_mask[i,::3,::3], v_mask[i,::3,::3], units='inches', scale=scl, width=0.015, color='b',transform=projection)
     ax.set_title(subtitles[i], loc='left')
     # 绘制矢量图例
-    qk = ax.quiverkey(q, 0.9, 1.05, 10, '10 m/s', labelpos='N', color='r')
+    qk = ax.quiverkey(q, 0.9, 1.05, U, Ulabel, labelpos='N', color='r')
     # ax 传递给axes
     axes.append(ax)
 #==============================================================================
 #调整布局
 fig.subplots_adjust(left=None, bottom=None, right=None, top=0.9, hspace=0.3, wspace=None)
 # 添加主标题
-figtitle = 'Vector plot'
-t = fig.text(0.5, 0.95, figtitle, horizontalalignment='center')
+t = fig.text(0.5, 0.95, figtitle, horizontalalignment='center', fontproperties=FontProperties(size=16))
 
 # 保存图片
 # adjust spacing between subplots so ax and ax1 title and ticks labels don't overlay
 #plt.show()
-fig.savefig('./fig/quiver.pdf')
+fig.savefig('../fig/reg.wind850.eps')
